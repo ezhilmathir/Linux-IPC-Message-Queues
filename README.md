@@ -1,6 +1,8 @@
-# Ex02-OS-Linux-Process API - fork(), wait(), exec()
+# Linux-IPC-Message-Queues
+Linux IPC-Message Queues
+
 # AIM:
-To write C Program that uses Linux Process API - fork(), wait(), exec()
+To write a C program that receives a message from message queue and display them
 
 # DESIGN STEPS:
 
@@ -10,91 +12,83 @@ Navigate to any Linux environment installed on the system or installed inside a 
 
 ### Step 2:
 
-Write the C Program using Linux Process API - fork(), wait(), exec()
+Write the C Program using Linux message queues API 
 
 ### Step 3:
 
-Test the C Program for the desired output. 
+Execute the C Program for the desired output. 
 
 # PROGRAM:
-## C Program to print process ID and parent Process ID using Linux API system calls :
-```c
+
+## C program that receives a message from message queue and display them
+```py
+writer.c
+
+// C Program for Message Queue (Writer Process) 
+#include <stdio.h> 
+#include <sys/ipc.h> 
+#include <sys/msg.h> 
+
+// structure for message queue 
+struct mesg_buffer { 
+	long mesg_type; 
+	char mesg_text[100]; 
+} message; 
+int main() 
+{ 	key_t key; 
+	int msgid;
+    // ftok to generate unique key 
+	key = ftok("progfile", 65); 
+	// msgget creates a message queue 
+	// and returns identifier 
+	msgid = msgget(key, 0666 | IPC_CREAT); 
+	message.mesg_type = 1; 
+	printf("Write Data : "); 
+	gets(message.mesg_text); 
+	// msgsnd to send message 
+	msgsnd(msgid, &message, sizeof(message), 0); 
+	// display the message 
+	printf("Data send is : %s \n", message.mesg_text); 
+	return 0; 
+} 
+reader.c
+
+// C Program for Message Queue (Reader Process)
 #include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-int main(void)
-{	//variable to store calling function's process id
-	pid_t process_id;
-	//variable to store parent function's process id
-	pid_t p_process_id;
-	//getpid() - will return process id of calling function
-	process_id = getpid();
-	//getppid() - will return process id of parent function
-	p_process_id = getppid();
-	//printing the process ids
+#include <sys/ipc.h>
+#include <sys/msg.h>
 
-//printing the process ids
-	printf("The process id: %d\n",process_id);
-	printf("The process id of parent function: %d\n",p_process_id);
-	return 0; }
-```
-## OUTPUT:
-![image](https://github.com/Jovita08/Linux-Process-API-fork-wait-exec/assets/94174503/94ca0c6d-db6e-492b-a613-dd052e27db19)
-
-
-## C Program to create new process using Linux API system calls fork() and exit():
-```c
-#include <stdlib.h>
-#include <sys/wait.h>
-#include<stdio.h>
-#include<unistd.h>
-#include <sys/types.h>
+// structure for message queue
+struct mesg_buffer {
+	long mesg_type;
+	char mesg_text[100];
+} message;
 int main()
-{ int pid; 
-pid=fork(); 
-if(pid == 0) 
-{ printf("Iam child my pid is %d\n",getpid()); 
-printf("My parent pid is:%d\n",getppid()); 
-exit(0); } 
-else{ 
-printf("I am parent, my pid is %d\n",getpid()); 
-sleep(100); 
-exit(0);} 
+{
+	key_t key;
+	int msgid;
+    	// ftok to generate unique key
+	key = ftok("progfile", 65);
+	// msgget creates a message queue
+	// and returns identifier
+	msgid = msgget(key, 0666 | IPC_CREAT);
+	// msgrcv to receive message
+	msgrcv(msgid, &message, sizeof(message), 1, 0);
+	// display the message
+	printf("Data Received is : %s \n",
+			message.mesg_text);
+
+	// to destroy the message queue
+	msgctl(msgid, IPC_RMID, NULL);
+	return 0;
 }
-```
-## OUTPUT:
-![image](https://github.com/Jovita08/Linux-Process-API-fork-wait-exec/assets/94174503/8672bb95-05f0-493e-9c7a-d5ef5c88a06a)
+````
 
 
-## C Program to execute Linux system commands using Linux API system calls exec() family:
-```c
-#include <stdlib.h>
-#include <sys/wait.h>
-#include<stdio.h>
-#include<unistd.h>
-#include <sys/types.h>
-int main()
-{       int status;
-        printf("Running ps with execlp\n");
-        execl("ps", "ps", "ax", NULL);
-        wait(&status);
-        if (WIFEXITED(status))
-                printf("child exited with status of %d\n", WEXITSTATUS(status));
-        else
-                puts("child did not exit successfully\n");
-        printf("Done.\n");
-printf("Running ps with execlp. Now with path specified\n");
-        execl("/bin/ps", "ps", "ax", NULL);
-        wait(&status);
-        if (WIFEXITED(status))
-                printf("child exited with status of %d\n", WEXITSTATUS(status));
-        else
-                puts("child did not exit successfully\n");
-        printf("Done.\n");
-        exit(0);}
-```
-## OUTPUT:
-![image](https://github.com/Jovita08/Linux-Process-API-fork-wait-exec/assets/94174503/c6cb29fa-bee5-41af-8a31-dd85fe0e4e12)
+## OUTPUT
+
+![Screenshot 2024-04-04 111731](https://github.com/23013743/Linux-IPC-Message-Queues/assets/161271714/8ca127fe-933f-4c9d-b3e0-c8e9bab31282)
+
 
 
 # RESULT:
